@@ -1,0 +1,262 @@
+import javax.swing.JOptionPane;
+
+public class Main
+{
+    public Main()
+    {
+        boolean check;
+        boolean alpha;
+        String input;
+
+        // Create a Stack
+        Stack s = new ArrayStack(20);
+
+        // Put some string onto the stack
+        do {
+            check = true;
+            input = JOptionPane.showInputDialog(null, "Please enter an infix notation expression between 3 and 20 characters: ");
+            //Check increments whenever there is an issue
+
+            //Exits the dialog boxes when the user clicks cancel
+            if (input == null)
+            {
+                System.exit(-1);
+            }
+
+            //If input is less than 3 or more than 20, check = false
+            if (input.length() < 3 || input.length() > 20)
+            {
+                JOptionPane.showMessageDialog(null, "Input was shorter than 3 or longer than 20, please try again");
+                check = false;
+            }
+
+            //Check if the characters are correct
+            for (int i = 0; i < input.length(); i++)
+            {
+                alpha = true;
+                char c = input.charAt(i);
+
+                if (!operand(c) && !operator(c))
+                {
+                    alpha = false;
+                }
+
+                if (!alpha)
+                {   //If so, check = false
+                    JOptionPane.showMessageDialog(null, "Only operands(1-9) and operators(+,-,*,/,^,(,)) are accepted");
+                    check = false;
+                    break;
+                }
+            }
+
+            //If there are no issues, push to stack
+            if (check)
+            {
+                inToPost(input);
+                s.push(input);
+            }
+
+        }while(!check);
+
+        String result = inToPost(input);
+        double ans = evaluate(result);
+
+        //Display the conversion result and answer to dialog box
+        while(!s.isEmpty())
+        {
+            JOptionPane.showMessageDialog(null, result);
+            JOptionPane.showMessageDialog(null, ans);
+            break;
+        }
+        System.exit(0);
+    }
+
+
+    //Algorithm to convert Infix to Postfix notation
+    public String inToPost(String input)
+    {
+        //Empty string for input
+        String result = new String("");
+
+        //Initializing empty stack
+        Stack stack = new ArrayStack(20);
+
+        //Scan input string left to right
+        for (int i = 0; i<input.length(); ++i)
+        {
+            //Convert each character to char
+            char c = input.charAt(i);
+
+            //Whenever there is an operand, add to the result string
+            if (Character.isLetterOrDigit(c))
+            {
+                result += c;
+            }
+
+            //Whenever there is a '(', push it to the stack.
+            else if (c == '(')
+            {
+                stack.push(c);
+            }
+
+            //Whenever there is a ')', pop and output from the stack until an '(' is encountered.
+            else if (c == ')')
+            {
+                while (!stack.isEmpty() && (char)stack.top() != '(')
+                {
+                    result += stack.pop();
+                }
+                if (!stack.isEmpty() && (char)stack.top() != '(')
+                {
+                    result = "Invalid Expression";
+                    return result;
+                }
+                else
+                {
+                    stack.pop();
+                }
+            }
+
+            //When an operator is found
+            else
+            {
+                while (!stack.isEmpty() && Precedence(c) <= Precedence((char)stack.top())){
+                    if((char)stack.top() == '(')
+                    {
+                        result = "Invalid Expression";
+                        return result;
+                    }
+                    result += stack.pop();
+                }
+                stack.push(c);
+            }
+        }
+
+        //Pop operators from stack
+        while (!stack.isEmpty())
+        {
+            if((char)stack.top() == '(')
+                return "Invalid Expression";
+            result += stack.pop();
+        }
+        return result;
+    }
+
+    //Evaluates and calculates the postfix equation
+    public double evaluate(String result)
+    {
+        double ans;
+        double x1;
+        double x2;
+        //Create an array stack
+        Stack stack = new ArrayStack(20);
+
+        for(int i = 0; i < result.length(); i++)
+        {
+            char c = result.charAt(i);
+
+            //Check if it is a digit, then push
+            if((Character.isDigit(c)))
+            {
+                stack.push(c - '0');
+            }
+            else
+            {
+                //Pop two operands
+                x1 = (int)stack.pop();
+                x2 = (int)stack.pop();
+
+                //Evaluate the operator and calculate the answer
+                switch (c) {
+                    case '+':
+                        stack.push(x1 + x2);
+                        System.out.println(x1+"+"+x2+"="+stack.top());
+                        break;
+                    case '-':
+                        stack.push(x2 - x1);
+                        System.out.println(x2+"-"+x1+"="+stack.top());
+                        break;
+                    case '*':
+                        stack.push(x1 * x2);
+                        System.out.println(x1+"*"+x2+"="+stack.top());
+                        break;
+                    case '/':
+                        stack.push(x2 / x1);
+                        System.out.println(x2+"/"+x1+"="+stack.top());
+                        break;
+                    case '^':
+                        stack.push(Math.pow(x2, x1));
+                        System.out.println(x2+"^"+x1+"="+stack.top());
+                        break;
+                }
+            }
+        }
+        //Cast to a double and return
+        ans = (double)stack.pop();
+        return ans;
+    }
+
+
+    //Used to determine the precedence of the operators
+    public int Precedence(int operator)
+    {
+        switch (operator)
+        {
+            case '^':
+                return 3;
+
+            case '*':
+            case '/':
+                return 2;
+
+            case '+':
+            case '-':
+                return 1;
+        }
+        return -1;
+    }
+
+    //Used to check for operators
+    public boolean operator(char c)
+    {
+        switch (c)
+        {
+            case '+':
+            case '-':
+            case '/':
+            case '*':
+            case '^':
+            case '(':
+            case ')':
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    //Method to check for operands
+    public boolean operand(char c)
+    {
+        switch (c)
+        {
+            case '0':
+            case '1':
+            case '2':
+            case '3':
+            case '4':
+            case '5':
+            case '6':
+            case '7':
+            case '8':
+            case '9':
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    public static void main(String[] args)
+    {
+        Main s = new Main();
+    }
+}
